@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 #project(libsrtp2 VERSION 2.4.2 LANGUAGES C)
+set(CMAKE_PROJECT_VERSION 2.4.2)
 
 set(PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
 set(PACKAGE_STRING "${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_VERSION}")
@@ -274,7 +275,7 @@ target_include_directories(srtp2 PUBLIC
 #添加lwip依赖
 target_link_libraries(srtp2 armino::lwip_intf_v2_1)
 # 忽略uint32_t和long int类型指针冲突错误
-target_compile_definitions(srtp2 PRIVATE -Wno-incompatible-pointer-types)
+target_compile_options(srtp2 PRIVATE -Wno-incompatible-pointer-types)
 #不安装
 #[[
 install(TARGETS srtp2 DESTINATION lib)
