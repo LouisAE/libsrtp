@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(libsrtp2 VERSION 2.4.2 LANGUAGES C)
+#project(libsrtp2 VERSION 2.4.2 LANGUAGES C)
 
 set(PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
 set(PACKAGE_STRING "${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_VERSION}")
@@ -13,7 +13,8 @@ include(CheckFunctionExists)
 include(CheckTypeSize)
 include(CheckCSourceCompiles)
 
-test_big_endian(WORDS_BIGENDIAN)
+#不检查字节序，会失败
+#test_big_endian(WORDS_BIGENDIAN)
 
 if (NOT APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
   set (HAVE_X86 TRUE)
@@ -25,7 +26,9 @@ check_include_file(arpa/inet.h HAVE_ARPA_INET_H)
 check_include_file(byteswap.h HAVE_BYTESWAP_H)
 check_include_file(inttypes.h HAVE_INTTYPES_H)
 check_include_file(machine/types.h HAVE_MACHINE_TYPES_H)
-check_include_file(netinet/in.h HAVE_NETINET_IN_H)
+#check_include_file(netinet/in.h HAVE_NETINET_IN_H)
+#用lwip的头文件代替
+set(HAVE_NETINET_IN_H 1)
 check_include_file(stdint.h HAVE_STDINT_H)
 check_include_file(stdlib.h HAVE_STDLIB_H)
 check_include_file(sys/int_types.h HAVE_SYS_INT_TYPES_H)
@@ -256,11 +259,33 @@ if(WIN32)
   target_compile_definitions(srtp2 PUBLIC _CRT_SECURE_NO_WARNINGS)
 endif()
 
+# lwip头文件
+target_include_directories(srtp2 PUBLIC
+  "$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/src/include"
+  "$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/src"
+	"$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/port"
+	"$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/src/include"
+	"$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/src/include/netif"
+	"$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/src/include/lwip"
+	"$ENV{ARMINO_PATH}/components/lwip_intf_v2_1/lwip-2.1.2/src/include/lwip/priv"
+)
+
+
+#添加lwip依赖
+target_link_libraries(srtp2 armino::lwip_intf_v2_1)
+# 忽略uint32_t和long int类型指针冲突错误
+target_compile_definitions(srtp2 PRIVATE -Wno-incompatible-pointer-types)
+#不安装
+#[[
 install(TARGETS srtp2 DESTINATION lib)
 install(FILES include/srtp.h crypto/include/auth.h
   crypto/include/cipher.h
   crypto/include/crypto_types.h
   DESTINATION include/srtp2)
+]]
+
+#不编译测试APP
+set(TEST_APPS off)
 
 if(TEST_APPS)
   enable_testing()
